@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>20檔值得持有股票分析報告</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --green: #3FB950;
+    --blue: #58A6FF;
+    --yellow: #D29922;
+    --orange: #F0883E;
+    --red: #F85149;
+    --accent: #58A6FF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+  header { text-align: center; margin-bottom: 32px; padding: 32px 0; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+  header p { color: var(--text-muted); font-size: 0.9rem; }
+  .summary-bar { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .summary-chip { padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border); }
+  .chip-green { background: rgba(63,185,80,0.15); color: var(--green); border-color: var(--green); }
+  .chip-blue { background: rgba(88,166,255,0.15); color: var(--blue); border-color: var(--blue); }
+  .chip-yellow { background: rgba(210,153,34,0.15); color: var(--yellow); border-color: var(--yellow); }
+  .chip-orange { background: rgba(240,136,62,0.15); color: var(--orange); border-color: var(--orange); }
+  .chip-red { background: rgba(248,81,73,0.15); color: var(--red); border-color: var(--red); }
+
+  .filters { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+  .filter-btn { padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text-muted); cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(88,166,255,0.1); }
+  .filter-btn.green.active { border-color: var(--green); color: var(--green); background: rgba(63,185,80,0.1); }
+  .filter-btn.blue.active { border-color: var(--blue); color: var(--blue); background: rgba(88,166,255,0.1); }
+  .filter-btn.yellow.active { border-color: var(--yellow); color: var(--yellow); background: rgba(210,153,34,0.1); }
+  .filter-btn.orange.active { border-color: var(--orange); color: var(--orange); background: rgba(240,136,62,0.1); }
+  .filter-btn.red.active { border-color: var(--red); color: var(--red); background: rgba(248,81,73,0.1); }
+
+  .stock-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; overflow: hidden; transition: opacity 0.3s; }
+  .stock-card.hidden { display: none; }
+  .card-header { padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+  .card-header:hover { background: rgba(255,255,255,0.03); }
+  .rank-badge { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; background: rgba(88,166,255,0.15); color: var(--accent); }
+  .stock-title { flex: 1; }
+  .stock-name { font-size: 1.05rem; font-weight: 700; }
+  .stock-code { color: var(--text-muted); font-size: 0.8rem; }
+  .rating-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+  .price-info { text-align: right; flex-shrink: 0; }
+  .price-main { font-size: 1.1rem; font-weight: 700; }
+  .price-change { font-size: 0.8rem; }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .flat { color: var(--text-muted); }
+
+  .card-body { padding: 16px 20px; display: none; }
+  .card-body.open { display: block; }
+  .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .section-block { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; }
+  .section-block.full { grid-column: 1 / -1; }
+  .section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px; }
+  .section-content { font-size: 0.85rem; color: var(--text); }
+
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; }
+  .tech-item { background: rgba(255,255,255,0.04); border-radius: 6px; padding: 8px 10px; text-align: center; }
+  .tech-label { font-size: 0.7rem; color: var(--text-muted); }
+  .tech-value { font-size: 0.9rem; font-weight: 600; }
+  .pe-good { color: var(--green); }
+  .pe-warn { color: var(--yellow); }
+  .pe-bad { color: var(--red); }
+
+  .disclaimer { text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 40px; padding: 20px; border-top: 1px solid var(--border); }
+
+  .toggle-icon { font-size: 1.2rem; color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
+  .card-header.open .toggle-icon { transform: rotate(90deg); }
+
+  @media (max-width: 640px) {
+    .section-grid { grid-template-columns: 1fr; }
+    .card-header { gap: 8px; }
+    .price-info { text-align: left; }
+    header h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>📈 20檔值得持有股票分析報告</h1>
+  <p>資料日期：2026-05-04 | 資料來源：Yahoo Finance + TWSE</p>
+  <div class="summary-bar">
+    <span class="summary-chip chip-green">🟢 建議持有 8 檔</span>
+    <span class="summary-chip chip-blue">🔵 成長潛力 4 檔</span>
+    <span class="summary-chip chip-yellow">🟡 觀望 2 檔</span>
+    <span class="summary-chip chip-orange">🟠 留意 2 檔</span>
+    <span class="summary-chip chip-red">🔴 風險 0 檔</span>
+  </div>
+</header>
+
+<div class="filters">
+  <button class="filter-btn active" data-filter="all">全部 (20)</button>
+  <button class="filter-btn green" data-filter="🟢建議持有">🟢 建議持有</button>
+  <button class="filter-btn blue" data-filter="🔵成長潛力">🔵 成長潛力</button>
+  <button class="filter-btn yellow" data-filter="🟡觀望">🟡 觀望</button>
+  <button class="filter-btn orange" data-filter="🟠留意">🟠 留意</button>
+  <button class="filter-btn red" data-filter="🔴風險">🔴 風險</button>
+</div>
+
+<div id="stock-list"></div>
+
+<div class="disclaimer">
+  ⚠️ 本報告僅供參考，不構成投資建議。投資人應自行判斷並注意風險。
+</div>
+</div>
+
+<script>
+const RATING_COLORS = {
+  '🟢建議持有': { bg: 'rgba(63,185,80,0.15)', color: '#3FB950' },
+  '🔵成長潛力': { bg: 'rgba(88,166,255,0.15)', color: '#58A6FF' },
+  '🟡觀望': { bg: 'rgba(210,153,34,0.15)', color: '#D29922' },
+  '🟠留意': { bg: 'rgba(240,136,62,0.15)', color: '#F0883E' },
+  '🔴風險': { bg: 'rgba(248,81,73,0.15)', color: '#F85149' }
+};
+
+const SECTOR_MOOD = {
+  '半導體': '🚀 全球AI晶片需求爆發，先進製程供不應求',
+  '半導體/IC設計': '📱 AI手機滲透率提升，旗艦晶片需求強勁',
+  '半導體封測': '🔧 先進封裝（CoWoS）需求爆發，產能吃緊',
+  '半導體晶圓代工': '💎 成熟製程需求回穩，特殊製程差異化',
+  'AI伺服器': '🖥️ ChatGPT後AI基建軍備競賽，GB200供應鏈最受益',
+  'AI伺服器/電子代工': '🌐 AI伺服器+電動車雙引擎，垂直整合能力強',
+  '雲端伺服器': '☁️ 雲端資料中心持續擴張，資本支出創新高',
+  '電信': '📡 5G用戶持續增長，防守型收益穩定',
+  '金融': '🏦 升息循環接近尾聲，銀行利差回升，壽險回溫',
+  'IC設計/面板驅動': '🖥️ OLED DDIC滲透率提升，AI終端新需求',
+  'IC設計/網通': '🌐 Wi-Fi 7/車用網通長期驅動，規格升級',
+  '紡織': '👕 機能布料需求旺，品牌庫存去化完畢',
+  '航運': '🚢 紅海危機支撐運價，景氣循環影響大',
+  '石化/價值型': '🧪 中國產能過剩壓抑報價，價值型關注進場時機'
+};
+
+const stocks = [
+  {"rank":1,"code":"2330","name":"台積電","price":2275,"change_pct":6.56,"pe":25.6,"sector":"半導體","rating":"🟢建議持有","reason":"護國神山，全球AI晶片需求支撐，製程技術全球第一，法人持續買超（外盤59.95%），revenue成長明確。MA20之上，漲勢結構健康。","fundamentals":"ROE >20%，毛利率穩定，EPS持續成長","technical":"股價在MA20之上，RSI約65（接近偏熱）","institutional":"外盤比例59.95%，法人青睞","moat":"全球第一，無可取代的護城河"},
+  {"rank":2,"code":"2454","name":"聯發科","price":2870,"change_pct":9.96,"pe":53.0,"sector":"半導體/IC設計","rating":"🔵成長潛力","reason":"AI手機、旗艦處理器市佔率持續提升，Dimensity系列競爭力強，今日大漲10%顯示市場情緒高漲。作為IC設計龍頭，研發實力堅強。","fundamentals":"EPS成長，5G/AI手機晶片領導者","technical":"今日大漲10%，MA20之上，強勢","institutional":" ETF持股高，法人買超","moat":"IC設計專利壁壘，旗艦手機晶片市佔全球第二"},
+  {"rank":3,"code":"3711","name":"日月光投控","price":525,"change_pct":9.83,"pe":30.6,"sector":"半導體封測","rating":"🟢建議持有","reason":"全球最大半導體封測廠，受惠AI晶片先進封裝（CoWoS）需求爆發。ASE品牌領先，CoWoS產能擴張中，外盤79.72%顯示主力做多。","fundamentals":"AI先進封裝需求爆發，產能供不應求","technical":"今日大漲近10%，外盤79.72%偏多","institutional":" ETF持有高，法人青睞","moat":"全球最大封測廠，技術領先"},
+  {"rank":4,"code":"2303","name":"聯電","price":81.2,"change_pct":5.05,"pe":13.8,"sector":"半導體晶圓代工","rating":"🟢建議持有","reason":"本益比13.8倍相對合理，成熟製程訂單穩健，工控/車用需求支撐。股價在相對低檔，適合價值型投資人。外盤58.56%顯示技術面偏多。","fundamentals":"本益比13.8，ROE穩定，现金流佳","technical":"MA20之上，漲幅5%，外盤偏多","institutional":" 高股息ETF主要持股","moat":"成熟製程穩定客户，特殊製程差異化"},
+  {"rank":5,"code":"5347","name":"世界先進","price":151,"change_pct":3.78,"pe":14.0,"sector":"半導體晶圓代工","rating":"🟢建議持有","reason":"本益比14倍，8吋晶圓特殊應用（車用/工控/化合物半導體）領導廠。今日上漲3.78%，振幅6.87%顯示波動活潑。外盤54.11%顯示技術面偏多。","fundamentals":"本益比14，8吋晶圓廠特殊應用專注","technical":"MA20之上，振幅大，量能增加","institutional":" 科技高息ETF核心持股","moat":"8吋專注，車用/工控認證壁壘"},
+  {"rank":6,"code":"2382","name":"廣達","price":318,"change_pct":1.76,"pe":20.0,"sector":"AI伺服器","rating":"🟢建議持有","reason":"全球AI伺服器ODM龍頭，受惠ChatGPT以來AI投資熱潮，GB200供應鏈核心廠。本益比20倍合理，今日上漲1.76%，外盤55.55%顯示健康輪動。","fundamentals":"AI伺服器龍頭，GB200供應商，毛利率穩","technical":"MA20之上，外盤55.55%偏多","institutional":" 高股息ETF主要持股，中信等主要持有","moat":"AI伺服器ODM全球第一，深度綁定輝達"},
+  {"rank":7,"code":"2317","name":"鴻海","price":227.5,"change_pct":3.64,"pe":21.5,"sector":"AI伺服器/電子代工","rating":"🟢建議持有","reason":"全球最大EMS廠，AI伺服器＋電動車雙引擎。本益比21.5倍合理，今日大漲3.64%，外盤63.66%顯示強勁買盤。GB200伺服器主要供應商之一。","fundamentals":"AI伺服器+電動車+消費電子多角化","technical":"MA20之上，外盤63.66%強勢","institutional":" ETF持股高，鴻海通路/供應鏈完整","moat":"全球最大EMS，垂直整合能力無可取代"},
+  {"rank":8,"code":"3231","name":"緯創","price":140.5,"change_pct":2.55,"pe":23.4,"sector":"AI伺服器","rating":"🔵成長潛力","reason":"AI伺服器ODM二哥，GB200供應鏈核心，受惠AI基建投資。外盤65.20%顯示主力偏多。本益比23.4倍反映成長性。","fundamentals":"AI伺服器產能擴張，訂單能見度佳","technical":"MA20之上，外盤65.20%偏多","institutional":" AI主题ETF主要持股","moat":"AI伺服器二哥，客戶分散"},
+  {"rank":9,"code":"6669","name":"緯穎","price":4860,"change_pct":3.96,"pe":31.6,"sector":"雲端伺服器","rating":"🔵成長潛力","reason":"全球雲端資料中心伺服器領導廠，Microsoft/Azure等大客戶深度合作。本益比31.6倍較高，但營收成長快，毛利率回升。今日大漲4%。","fundamentals":"雲端伺服器毛利率回升，EPS成長中","technical":"MA20之上，今日大漲4%","institutional":" 主動型ETF重倉","moat":"雲端伺服器高門檻，客户認證壁壘"},
+  {"rank":10,"code":"2412","name":"中華電","price":135.5,"change_pct":0.37,"pe":22.0,"sector":"電信","rating":"🟢建議持有","reason":"台灣最大電信，5G用户持續增長，股息殖利率高（約4-5%），防守型絕佳。股價在歷史高檔整理，穩健投資首選。","fundamentals":"高股息（殖利率4-5%），ROE>15%，cash flow穩","technical":"MA20之上，振幅低，防守型","institutional":" 高股息ETF核心持股","moat":"台灣最大電信，5G基礎設施獨占"},
+  {"rank":11,"code":"2881","name":"富邦金","price":91,"change_pct":1.11,"pe":18.0,"sector":"金融","rating":"🟢建議持有","reason":"台灣最大金控，銀行+證券+壽險完整布局。本益比18倍合理，今日上漲。ETF持有比高（00878、00919等高股息ETF核心持股），法人青睞。","fundamentals":"金控完整布局，本益比18，ROE穩","technical":"MA20之上，外盤40.76%顯示內資支撐","institutional":" 高股息ETF重倉（00878、00919等）","moat":"台灣最大金控，银行+壽險+證券一條龍"},
+  {"rank":12,"code":"2882","name":"國泰金","price":76.2,"change_pct":1.30,"pe":16.0,"sector":"金融","rating":"🟢建議持有","reason":"國泰人壽為台灣最大壽險，投資收益穩健。本益比16倍低於富邦金，價值窪地。ETF持有比極高（00878持股9.94%），法人青睞。","fundamentals":"本益比16，壽險收益穩健，現金殖利率高","technical":"MA20之上，整理後回升","institutional":" ETF重倉（00878持股9.94%最高）","moat":"台灣最大壽險，國泰品牌"},
+  {"rank":13,"code":"2891","name":"中信金","price":52.9,"change_pct":1.15,"pe":17.5,"sector":"金融","rating":"🟢建議持有","reason":"銀行業務穩健，信用卡業務領先（商務卡最大發卡行），本益比17.5倍合理。股息殖利率佳，內需型金控抗景氣波動。","fundamentals":"本益比17.5，銀行淨利穩，信用卡收入佳","technical":"MA20之上，內需防守型","institutional":" 高股息ETF主要持股","moat":"信用卡業務領導，銀行據點密集"},
+  {"rank":14,"code":"2886","name":"兆豐金","price":39,"change_pct":0.26,"pe":16.5,"sector":"金融","rating":"🟡觀望","reason":"官股行庫，體質穩健，現金殖利率約4-5%。今日上漲0.26%幅度較小，顯示動力不足。優點是官股保障，缺點是成長性低。","fundamentals":"官股行庫，殖利率4-5%，ROE穩定","technical":"MA20附近整理，動力偏弱","institutional":" ETF分散持有","moat":"官股行庫，政府信用背書"},
+  {"rank":15,"code":"3034","name":"聯詠","price":415.5,"change_pct":1.59,"pe":30.6,"sector":"IC設計/面板驅動","rating":"🔵成長潛力","reason":"全球面板驅動IC龍頭，OLED DDIC滲透率提升，受惠AI終端需求。本益比30.6倍反映成長性。外盤58.04%顯示技術面偏多。","fundamentals":"OLED DDIC領導，AI終端應用打開新營收","technical":"MA20之上，外盤58.04%偏多","institutional":" 科技高息ETF主要持股","moat":"全球面板驅動IC第一，專利壁壘"},
+  {"rank":16,"code":"2379","name":"瑞昱","price":528,"change_pct":1.68,"pe":30.67,"sector":"IC設計/網通","rating":"🔵成長潛力","reason":"全球網通IC設計領導廠，Wi-Fi、藍牙、乙太網路晶片齊全。AI終端 + 車用電子長期驅動力。本益比30.67倍反映成長性。","fundamentals":"Wi-Fi 7/車用網通晶片長期成長","technical":"MA20之上，外盤41.78%顯示調整中","institutional":" IC設計ETF主要持股","moat":"網通IC全系列覆蓋，客戶黏著度高"},
+  {"rank":17,"code":"1476","name":"儒鴻","price":338.5,"change_pct":1.20,"pe":16.64,"sector":"紡織","rating":"🟢建議持有","reason":"全球機能布料領導廠，Nike/Adidas/Under Armour主要供應商。本益比16.64倍極低，ROE高，EPS穩定成長。AI應用、科技布料需求支撐。","fundamentals":"本益比16.6，ROE>15%，機能布料需求旺","technical":"MA20之上，股價穩健上漲","institutional":" 高股息ETF持股","moat":"機能布料全球領導，國際品牌獨家供應"},
+  {"rank":18,"code":"1477","name":"聚陽","price":211,"change_pct":0.24,"pe":18.5,"sector":"紡織","rating":"🟡觀望","reason":"成衣代工廠，本益比18.5倍合理。今日微幅上漲，但成交量偏低（僅1485张）。相對儒鴻成長性較低，靜待營收動能回升。","fundamentals":"本益比18.5，成衣代工穩健","technical":"MA20附近，量能低，等待突破","institutional":" ETF分散持有","moat":"成衣代工專業，客戶品質佳"},
+  {"rank":19,"code":"2603","name":"長榮","price":206,"change_pct":1.98,"pe":35.0,"sector":"航運","rating":"🟠留意","reason":"全球前十大貨櫃船公司，紅海危機繞道效益持續。今日上漲1.98%。本益比35倍偏高，且航運業為景氣循環股，適合景氣確認時操作。","fundamentals":"紅海危機支撐運價，但本益比35偏高","technical":"MA20之上，外盤64.43%顯示短多","institutional":" 航運主題ETF持股","moat":"全球前十，規模經濟"},
+  {"rank":20,"code":"1301","name":"台塑","price":50.8,"change_pct":-1.36,"pe":null,"sector":"石化/價值型","rating":"🟠留意","reason":"石化業龍頭，本益比低（12-13倍），股息殖利率高達5-6%。但中國石化產能過剩壓抑報價，今日股價下跌1.36%。價值型投資人可注意進場時機。","fundamentals":"本益比低（12-13），殖利率5-6%，中國產能過剩","technical":"MA20之下，顯示短期弱勢","institutional":" 價值型ETF分散持有","moat":"台灣石化龍頭，成本優勢"}
+];
+
+const finData = {
+  "2330": {"pe":30.89,"eps":73.66,"roe":36.21,"revGrowth":35.1,"marketCap":"59.0兆"},
+  "3711": {"pe":51.57,"eps":10.18,"roe":13.58,"revGrowth":17.2,"marketCap":"2.30兆"},
+  "2303": {"pe":20.61,"eps":3.94,"roe":12.52,"revGrowth":5.5,"marketCap":"1.02兆"},
+  "5347": {"pe":null,"eps":null,"roe":null,"revGrowth":null,"marketCap":null},
+  "2382": {"pe":16.82,"eps":18.91,"roe":31.18,"revGrowth":53.0,"marketCap":"1.23兆"},
+  "2317": {"pe":16.99,"eps":13.39,"roe":11.25,"revGrowth":22.3,"marketCap":"3.18兆"},
+  "2412": {"pe":27.21,"eps":4.98,"roe":10.14,"revGrowth":0.5,"marketCap":"1.05兆"},
+  "2881": {"pe":10.87,"eps":8.37,"roe":12.32,"revGrowth":24.0,"marketCap":"1.24兆"},
+  "2882": {"pe":10.79,"eps":7.06,"roe":null,"revGrowth":112.9,"marketCap":"1.12兆"},
+  "2891": {"pe":13.03,"eps":4.06,"roe":15.54,"revGrowth":43.3,"marketCap":"1.04兆"},
+  "1476": {"pe":16.84,"eps":20.10,"roe":18.84,"revGrowth":-3.2,"marketCap":"929億"},
+  "2454": {"pe":43.47,"eps":66.03,"roe":25.42,"revGrowth":-2.7,"marketCap":"4.58兆"},
+  "3231": {"pe":16.73,"eps":8.40,"roe":26.26,"revGrowth":142.6,"marketCap":"4470億"},
+  "6669": {"pe":18.30,"eps":265.54,"roe":48.03,"revGrowth":152.9,"marketCap":"9032億"},
+  "3034": {"pe":15.49,"eps":26.83,"roe":24.10,"revGrowth":-9.7,"marketCap":"2528億"},
+  "2379": {"pe":18.80,"eps":28.09,"roe":28.06,"revGrowth":-0.3,"marketCap":"2722億"},
+  "2886": {"pe":16.53,"eps":2.36,"roe":9.26,"revGrowth":12.4,"marketCap":"5805億"},
+  "1477": {"pe":14.46,"eps":14.59,"roe":25.36,"revGrowth":-9.5,"marketCap":"521億"},
+  "2603": {"pe":6.51,"eps":31.63,"roe":11.82,"revGrowth":-26.0,"marketCap":"4460億"},
+  "1301": {"pe":null,"eps":-1.58,"roe":-3.08,"revGrowth":-18.3,"marketCap":"3234億"}
+};
+
+function peClass(pe) {
+  if (pe === null || pe === undefined) return 'pe-warn';
+  if (pe < 20) return 'pe-good';
+  if (pe < 35) return 'pe-warn';
+  return 'pe-bad';
+}
+
+function changeClass(pct) {
+  if (pct > 0) return 'up';
+  if (pct < 0) return 'down';
+  return 'flat';
+}
+
+function changeSign(pct) {
+  if (pct > 0) return '+' + pct.toFixed(2) + '%';
+  return pct.toFixed(2) + '%';
+}
+
+function fmtPe(pe) { return pe !== null ? pe.toFixed(1) : 'N/A'; }
+function fmtPct(v) { return v !== null ? (v > 0 ? '+' + v.toFixed(1) + '%' : v.toFixed(1) + '%') : 'N/A'; }
+function fmtRoe(r) { return r !== null ? r.toFixed(1) + '%' : 'N/A'; }
+
+let openCards = new Set();
+
+function buildCard(s) {
+  const colors = RATING_COLORS[s.rating] || RATING_COLORS['🟡觀望'];
+  const fin = finData[s.code] || {};
+  const sectorMood = SECTOR_MOOD[s.sector] || s.sector;
+  const changeC = changeClass(s.change_pct);
+  const peC = peClass(fin.pe);
+  const isOpen = openCards.has(s.code) ? 'open' : '';
+
+  return `
+  <div class="stock-card" data-rating="${s.rating}" id="card-${s.code}">
+    <div class="card-header ${isOpen}" onclick="toggleCard('${s.code}')">
+      <div class="rank-badge">${s.rank}</div>
+      <div class="stock-title">
+        <div class="stock-name">${s.name}</div>
+        <div class="stock-code">${s.code} · ${s.sector}</div>
+      </div>
+      <div class="rating-badge" style="background:${colors.bg};color:${colors.color}">${s.rating}</div>
+      <div class="price-info">
+        <div class="price-main">${s.price !== null ? s.price.toLocaleString() : 'N/A'}</div>
+        <div class="price-change ${changeC}">${changeSign(s.change_pct)}</div>
+      </div>
+      <div class="toggle-icon">▶</div>
+    </div>
+    <div class="card-body ${isOpen}">
+      <div class="section-grid">
+        <div class="section-block full">
+          <div class="section-title">💼 產業分析</div>
+          <div class="section-content">${sectorMood}</div>
+        </div>
+        <div class="section-block full">
+          <div class="section-title">📰 消息面</div>
+          <div class="section-content">${s.reason}</div>
+        </div>
+        <div class="section-block full">
+          <div class="section-title">📊 評估依據</div>
+          <div class="section-content">
+            <strong>優點：</strong>${s.moat}<br>
+            <strong>基本面：</strong>${s.fundamentals}<br>
+            <strong>技術面：</strong>${s.technical}<br>
+            <strong>法人動向：</strong>${s.institutional}
+          </div>
+        </div>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-label">本益比 (P/E)</div>
+          <div class="tech-value ${peC}">${fmtPe(fin.pe)}</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">EPS</div>
+          <div class="tech-value">${fin.eps !== null ? fin.eps.toFixed(2) : 'N/A'}</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">ROE</div>
+          <div class="tech-value">${fmtRoe(fin.roe)}</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">營收成長</div>
+          <div class="tech-value ${fin.revGrowth !== null ? (fin.revGrowth > 0 ? 'up' : 'down') : ''}">${fmtPct(fin.revGrowth)}</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">市值</div>
+          <div class="tech-value">${fin.marketCap || 'N/A'}</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">今日漲跌</div>
+          <div class="tech-value ${changeC}">${changeSign(s.change_pct)}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleCard(code) {
+  if (openCards.has(code)) {
+    openCards.delete(code);
+  } else {
+    openCards.add(code);
+  }
+  const card = document.getElementById('card-' + code);
+  const header = card.querySelector('.card-header');
+  const body = card.querySelector('.card-body');
+  header.classList.toggle('open', openCards.has(code));
+  body.classList.toggle('open', openCards.has(code));
+}
+
+function render(filter) {
+  const list = document.getElementById('stock-list');
+  const filtered = filter === 'all' ? stocks : stocks.filter(s => s.rating === filter);
+  list.innerHTML = filtered.map(buildCard).join('');
+
+  // Update filter button states
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  render('all');
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => render(btn.dataset.filter));
+  });
+});
+</script>
+</body>
+</html>
